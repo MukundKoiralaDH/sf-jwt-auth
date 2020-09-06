@@ -1,6 +1,5 @@
 const fs = require("fs-extra");
 const querystring = require("querystring");
-const base64 = require("js-base64");
 const jsforce = require("jsforce");
 const axios = require("axios");
 const moment = require("moment");
@@ -9,27 +8,28 @@ const url = require("url");
 
 const env = require("./environment");
 
-let privatekey = fs.readFileSync("privatekey.pem");
+// The private key that corresponds to the connected app in which certificate is uploaded.
+const privatekey = fs.readFileSync("privatekey.pem");
 
-var jwtparams = {
+let jwtparams = {
   aud: env.sfUrl,
   prn: env.username,
   iss: env.clientId,
   exp: parseInt(moment().add(5, "minutes").format("X")),
 };
 
-var token = jwt.sign(jwtparams, privatekey, { algorithm: "RS256" });
+let jwtoken = jwt.sign(jwtparams, privatekey, { algorithm: "RS256" });
 
-var sfParams = {
+let sfParams = {
   grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-  assertion: token,
+  assertion: jwtoken,
 };
 
-var tokenUrl = new url.URL("/services/oauth2/token", env.sfUrl).toString();
+const sfTokenURL = new url.URL("/services/oauth2/token", env.sfUrl).toString();
 
 const logintoSalesforce = async () => {
   // preparing to connect to salesforce using jwt token
-  const auth = await axios.post(tokenUrl, querystring.stringify(sfParams));
+  const auth = await axios.post(sfTokenURL, querystring.stringify(sfParams));
   // success will give access token that can be used in subsequent steps.
   const conn = new jsforce.Connection({
     instanceUrl: auth.data.instance_url,

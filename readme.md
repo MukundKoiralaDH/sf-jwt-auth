@@ -1,1 +1,1 @@
-##Authenticate to SF using JWT
+## Authenticate to Salesforce using JWT
